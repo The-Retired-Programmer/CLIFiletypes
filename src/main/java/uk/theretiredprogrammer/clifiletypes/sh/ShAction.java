@@ -1,4 +1,4 @@
-package uk.theretiredprogrammer.clifiletypes.pgsql;
+package uk.theretiredprogrammer.clifiletypes.sh;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,27 +14,27 @@ import uk.theretiredprogrammer.clifiletypes.cli.CLI;
 
 @ActionID(
         category = "Build",
-        id = "uk.theretiredprogrammer.clifiletypes.pgsql.ExecutePGSQLFile"
+        id = "uk.theretiredprogrammer.clifiletypes.sh.ExecuteShFile"
 )
 @ActionRegistration(
         displayName = "#CTL_ExecuteFile"
 )
 @ActionReferences({
-    @ActionReference(path = "Loaders/text/x-pgsql/Actions", position = 150),
-    @ActionReference(path = "Editors/text/x-pgsql/Popup", position = 100)
+    @ActionReference(path = "Loaders/text/x-sh/Actions", position = 150),
+    @ActionReference(path = "Editors/text/x-sh/Popup", position = 100)
 })
 @Messages("CTL_ExecuteFile=Execute")
-public final class PGSQLAction implements ActionListener, Runnable {
+public final class ShAction implements ActionListener, Runnable {
 
     private final List<DataObject> context;
 
-    public PGSQLAction(List<DataObject> context) {
+    public ShAction(List<DataObject> context) {
         this.context = context;
     }
 
     @Override
     public void actionPerformed(ActionEvent ev) {
-        RequestProcessor rp = new RequestProcessor("text-x-pgsql_execute");
+        RequestProcessor rp = new RequestProcessor("text-x-sh_execute");
         rp.post(this);
     }
 
@@ -42,9 +42,12 @@ public final class PGSQLAction implements ActionListener, Runnable {
     public void run() {
         for (DataObject dataObject : context) {
             CLI.saveIfModified(dataObject);
-            PgsqlFile input = new PgsqlFile(dataObject.getPrimaryFile());
-            CLI cli = new CLI("psql", "-w", "-P", "pager", "--dbname=" + input.getDbname(), "--file=" + input.getPath());
-            cli.execute(input.getParent(),"pgsql execution");
+            ShFile script = new ShFile(dataObject.getPrimaryFile());
+            if (!script.extractParametersFromFile()) {
+                return;
+            }
+            CLI cli = new CLI("bash", script.getPath(), script.getparameters());
+            cli.execute(script.getParentFile(),"sh execution");
         }
     }
 }

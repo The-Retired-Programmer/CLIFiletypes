@@ -1,6 +1,7 @@
 package uk.theretiredprogrammer.clifiletypes.cli;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import org.netbeans.api.io.OutputWriter;
 import org.openide.cookies.SaveCookie;
@@ -31,11 +32,10 @@ public class CLI {
         return res;
     }
 
-    public void execute(String tabname) {
-        startMessage();
+    public void execute(File parent, String tabname) {
+        ReportingTab.startMessage(command);
         IOTab executetab = new IOTab(tabname).reset();
-        pb = new ProcessBuilder(command);
-        pb.redirectErrorStream(true);
+        pb = new ProcessBuilder(command).directory(parent).redirectErrorStream(true);
         try (OutputWriter outwriter = executetab.getOut()) {
             Process p = pb.start();
             try (BufferedReader in = p.inputReader()) {
@@ -46,13 +46,13 @@ public class CLI {
                 int rc;
                 rc = p.waitFor();
                 if (rc == 0) {
-                    successMessage();
+                    ReportingTab.successMessage();
                 } else {
-                    errorMessage(rc);
+                    ReportingTab.errorMessage(rc);
                 }
             }
         } catch (IOException | InterruptedException ex) {
-            exceptionMessage(ex);
+            ReportingTab.exceptionMessage(ex);
         }
     }
 
@@ -65,37 +65,7 @@ public class CLI {
                 }
             }
         } catch (IOException ex) {
-            recoverableExceptionMessage(ex);
+            ReportingTab.recoverableExceptionMessage(ex);
         }
-    }
-
-    private static IOTab reportingtab = null;
-
-    private static IOTab getIOTab() {
-        if (reportingtab == null) {
-            reportingtab = new IOTab("External Processes Reporting").reset();
-        }
-        return reportingtab;
-    }
-
-    public void exceptionMessage(Exception ex) {
-        getIOTab().getErr().println("Command terminated, reporting an exception: " + ex.getLocalizedMessage());
-    }
-
-    private static void recoverableExceptionMessage(Exception ex) {
-        getIOTab().getErr().println("Command continueing with possible problems, recovered from an exception: " + ex.getLocalizedMessage());
-    }
-
-    public void errorMessage(int rc) {
-        getIOTab().getErr().println("Command finished, reporting a return code " + rc);
-    }
-
-    public void successMessage() {
-        getIOTab().getOut().println("Command finished sucessfully");
-
-    }
-
-    public void startMessage() {
-        getIOTab().getOut().println(String.join(" ", command));
     }
 }

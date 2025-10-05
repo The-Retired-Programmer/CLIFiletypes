@@ -27,7 +27,10 @@ public class PgsqlFile {
     public String getPath() {
         return pgsqlFile.getPath();
     }
-    
+
+    public File getParent() {
+        return FileUtil.toFile(pgsqlFO.getParent());
+    }
 
     public String getDbname() {
         String dbname;
