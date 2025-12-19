@@ -43,10 +43,12 @@ public final class ShAction implements ActionListener, Runnable {
         for (DataObject dataObject : context) {
             CLI.saveIfModified(dataObject);
             ShFile script = new ShFile(dataObject.getPrimaryFile());
-            if (!script.extractParametersFromFile()) {
+            ExtractedParameterActions actions = new ExtractedParameterActions();
+            actions.extractParametersFromFile(script.getFile());
+            if (!actions.displayDialog()) {
                 return;
             }
-            CLI cli = new CLI("bash", script.getPath(), script.getparameters());
+            CLI cli = new CLI("bash", script.getPath(), actions.evaluateParameters());
             cli.execute(script.getParentFile(),"sh execution");
         }
     }
